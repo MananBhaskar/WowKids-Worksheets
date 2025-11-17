@@ -1,9 +1,17 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
+  const [dropdownTimeout, setDropdownTimeout] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -13,6 +21,25 @@ const Navbar = () => {
     setActiveDropdown(activeDropdown === menu ? null : menu);
   };
 
+  const handleMouseEnter = (menu) => {
+    if (!isMobile) {
+      if (dropdownTimeout) {
+        clearTimeout(dropdownTimeout);
+        setDropdownTimeout(null);
+      }
+      setActiveDropdown(menu);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (!isMobile) {
+      const timeout = setTimeout(() => {
+        setActiveDropdown(null);
+      }, 300);
+      setDropdownTimeout(timeout);
+    }
+  };
+
   const menuItems = {
     preschool: [
       { name: 'Preschool Tracing', path: '/preschool-tracing' },
@@ -20,8 +47,7 @@ const Navbar = () => {
       { name: 'Math', path: '/preschool-math' },
       { name: 'Science', path: '/preschool-science' },
       { name: 'Homework', path: '/preschool-homework' },
-      { name: 'Practice', path: '/preschool-practice' },
-      // { name: 'Activity', path: '/preschool-activity' }
+      { name: 'Practice', path: '/preschool-practice' }
     ],
     kindergarten: [
       { name: 'Nursery', path: '/kindergarten-nursery' },
@@ -48,291 +74,284 @@ const Navbar = () => {
     ]
   };
 
+  const DesktopDropdown = ({ title, items, menuKey, isHighlighted }) => (
+    <div
+      style={{ position: 'relative' }}
+      onMouseEnter={() => handleMouseEnter(menuKey)}
+      onMouseLeave={handleMouseLeave}
+    >
+      <button
+        style={{
+          padding: '0.5rem 1rem',
+          background: isHighlighted ? 'linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%)' : 'transparent',
+          color: isHighlighted ? '#ffffff' : (activeDropdown === menuKey ? '#9333ea' : '#374151'),
+          fontWeight: 600,
+          borderRadius: isHighlighted ? '0.5rem' : '0',
+          border: 'none',
+          cursor: 'pointer',
+          transition: 'all 0.3s'
+        }}
+      >
+        {title}
+      </button>
+      {activeDropdown === menuKey && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            backgroundColor: '#ffffff',
+            boxShadow: '0 10px 25px -5px rgba(0,0,0,0.2)',
+            borderRadius: '0.75rem',
+            padding: '0.75rem 0',
+            minWidth: '220px',
+            zIndex: 100,
+            marginTop: '0.5rem',
+            border: '2px dashed #e9d5ff'
+          }}
+        >
+          {items.map((item, idx) => (
+            <a
+              key={idx}
+              href={item.path}
+              style={{
+                display: 'block',
+                padding: '0.75rem 1.5rem',
+                color: '#374151',
+                textDecoration: 'none',
+                fontSize: '0.95rem',
+                transition: 'all 0.2s',
+                fontWeight: 600,
+                borderLeft: '4px solid transparent'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#f3e8ff';
+                e.currentTarget.style.color = '#9333ea';
+                e.currentTarget.style.borderLeftColor = '#9333ea';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = '#374151';
+                e.currentTarget.style.borderLeftColor = 'transparent';
+              }}
+            >
+              {item.name}
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  const MobileDropdown = ({ title, items, menuKey, isHighlighted }) => (
+    <div style={{ marginBottom: '0.5rem' }}>
+      <button
+        onClick={() => toggleDropdown(menuKey)}
+        style={{
+          width: '100%',
+          textAlign: 'left',
+          padding: '0.75rem 1rem',
+          background: isHighlighted ? 'linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%)' : '#f3f4f6',
+          color: isHighlighted ? '#ffffff' : '#374151',
+          fontWeight: 600,
+          borderRadius: '0.5rem',
+          border: 'none',
+          cursor: 'pointer',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}
+      >
+        {title}
+        <span style={{ transform: activeDropdown === menuKey ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.3s' }}>▼</span>
+      </button>
+      <div
+        style={{
+          maxHeight: activeDropdown === menuKey ? '500px' : '0',
+          overflow: 'hidden',
+          transition: 'max-height 0.3s ease'
+        }}
+      >
+        <div style={{
+          backgroundColor: '#faf5ff',
+          borderRadius: '0.5rem',
+          padding: activeDropdown === menuKey ? '0.5rem' : '0',
+          marginTop: activeDropdown === menuKey ? '0.5rem' : '0',
+          border: '2px dashed #e9d5ff'
+        }}>
+          {items.map((item, idx) => (
+            <a
+              key={idx}
+              href={item.path}
+              onClick={() => setMobileMenuOpen(false)}
+              style={{
+                display: 'block',
+                padding: '0.5rem 1rem',
+                color: '#374151',
+                textDecoration: 'none',
+                fontSize: '0.9rem',
+                fontWeight: 500,
+                borderRadius: '0.25rem',
+                transition: 'background-color 0.2s'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#f3e8ff';
+                e.currentTarget.style.color = '#9333ea';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = '#374151';
+              }}
+            >
+              {item.name}
+            </a>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <nav className="bg-white shadow-md sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-6 md:px-10">
-        <div className="flex justify-between items-center py-4">
+    <nav style={{ backgroundColor: '#ffffff', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', position: 'sticky', top: 0, zIndex: 50 }}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: isMobile ? '0.5rem 1rem' : '0.5rem 2.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.5rem', paddingBottom: '0.5rem' }}>
           {/* Logo */}
-          <Link to="/" className="flex items-center">
+          <a href="/" style={{ display: 'flex', alignItems: 'center' }}>
             <img 
               src="/wowkidsworksheet.png" 
               alt="WowKids Worksheets" 
-              className="h-[140px] w-auto cursor-pointer" 
+              style={{ height: isMobile ? '70px' : '100px', width: 'auto', cursor: 'pointer' }}
             />
-          </Link>
+          </a>
+
           {/* Mobile Menu Toggle */}
           <button
             onClick={toggleMobileMenu}
-            className="lg:hidden text-3xl text-gray-800 focus:outline-none"
+            style={{
+              display: isMobile ? 'block' : 'none',
+              fontSize: '2rem',
+              color: '#1f2937',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: '0.5rem'
+            }}
           >
-            ☰
+            {mobileMenuOpen ? '✕' : '☰'}
           </button>
+
           {/* Desktop Menu */}
-          <ul className="hidden lg:flex items-center gap-6">
-            {/* Preschool Dropdown */}
-            <li className="relative group">
-              <button className="px-4 py-2 bg-yellow-400 text-gray-800 font-semibold rounded-lg hover:bg-yellow-500 transition-colors flex items-center gap-1">
-                Preschool +
-              </button>
-              <div className="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 border-2 border-dashed border-purple-300">
-                <div className="py-2">
-                  {menuItems.preschool.map((item, index) => (
-                    <Link
-                      key={index}
-                      to={item.path}
-                      className="block px-6 py-3 text-gray-800 hover:bg-purple-50 hover:text-purple-600 transition-colors font-semibold border-l-4 border-transparent hover:border-purple-600"
-                    >
-                      {item.name}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </li>
-            {/* Kindergarten Dropdown */}
-            <li className="relative group">
-              <button className="px-4 py-2 text-gray-800 font-semibold hover:text-red-500 transition-colors">
-                Kindergarten +
-              </button>
-              <div className="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 border-2 border-dashed border-purple-300">
-                <div className="py-2">
-                  {menuItems.kindergarten.map((item, index) => (
-                    <Link
-                      key={index}
-                      to={item.path}
-                      className="block px-6 py-3 text-gray-800 hover:bg-purple-50 hover:text-purple-600 transition-colors font-semibold border-l-4 border-transparent hover:border-purple-600"
-                    >
-                      {item.name}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </li>
-            {/* 1st Grade Dropdown */}
-            <li className="relative group">
-              <button className="px-4 py-2 text-gray-800 font-semibold hover:text-red-500 transition-colors">
-                1st Grade +
-              </button>
-              <div className="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 border-2 border-dashed border-purple-300">
-                <div className="py-2">
-                  {menuItems.firstGrade.map((item, index) => (
-                    <Link
-                      key={index}
-                      to={item.path}
-                      className="block px-6 py-3 text-gray-800 hover:bg-purple-50 hover:text-purple-600 transition-colors font-semibold border-l-4 border-transparent hover:border-purple-600"
-                    >
-                      {item.name}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </li>
-            {/* 2nd Grade Dropdown */}
-            <li className="relative group">
-              <button className="px-4 py-2 text-gray-800 font-semibold hover:text-red-500 transition-colors">
-                2nd Grade +
-              </button>
-              <div className="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 border-2 border-dashed border-purple-300">
-                <div className="py-2">
-                  {menuItems.secondGrade.map((item, index) => (
-                    <Link
-                      key={index}
-                      to={item.path}
-                      className="block px-6 py-3 text-gray-800 hover:bg-purple-50 hover:text-purple-600 transition-colors font-semibold border-l-4 border-transparent hover:border-purple-600"
-                    >
-                      {item.name}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </li>
-            {/* Blogs Dropdown */}
-            <li className="relative group">
-              <button className="px-4 py-2 text-gray-800 font-semibold hover:text-red-500 transition-colors">
-                Blogs +
-              </button>
-              <div className="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 border-2 border-dashed border-purple-300">
-                <div className="py-2">
-                  {menuItems.blogs.map((item, index) => (
-                    <Link
-                      key={index}
-                      to={item.path}
-                      className="block px-6 py-3 text-gray-800 hover:bg-purple-50 hover:text-purple-600 transition-colors font-semibold border-l-4 border-transparent hover:border-purple-600"
-                    >
-                      {item.name}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </li>
-          </ul>
-          {/* Actions */}
-          <div className="hidden lg:flex items-center gap-4">
-            <button className="w-12 h-12 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full flex items-center justify-center text-white hover:from-blue-500 hover:to-cyan-500 hover:scale-110 transition-all text-2xl">
+          <div style={{ display: isMobile ? 'none' : 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <DesktopDropdown title="Preschool +" items={menuItems.preschool} menuKey="preschool" isHighlighted={true} />
+            <DesktopDropdown title="Kindergarten +" items={menuItems.kindergarten} menuKey="kindergarten" />
+            <DesktopDropdown title="1st Grade +" items={menuItems.firstGrade} menuKey="firstGrade" />
+            <DesktopDropdown title="2nd Grade +" items={menuItems.secondGrade} menuKey="secondGrade" />
+            <DesktopDropdown title="Blogs +" items={menuItems.blogs} menuKey="blogs" />
+
+            <button style={{
+              marginLeft: '1rem',
+              width: '48px',
+              height: '48px',
+              background: 'linear-gradient(135deg, #60a5fa 0%, #22d3ee 100%)',
+              borderRadius: '50%',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '1.5rem',
+              transition: 'transform 0.3s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            >
               🔍
             </button>
-            <Link
-              to="/privacy-policy"
-              className="px-6 py-3 bg-gradient-to-r from-amber-400 to-orange-500 text-white font-bold rounded-full border-4 border-dashed border-amber-600 hover:from-amber-500 hover:to-orange-600 hover:scale-105 transition-all whitespace-nowrap shadow-lg"
+
+            <a
+              href="/privacy-policy"
+              style={{
+                marginLeft: '0.5rem',
+                padding: '0.75rem 1.5rem',
+                background: 'linear-gradient(90deg, #fbbf24 0%, #f97316 100%)',
+                color: '#ffffff',
+                borderRadius: '9999px',
+                fontWeight: 700,
+                border: '4px dashed #ca8a04',
+                cursor: 'pointer',
+                textDecoration: 'none',
+                whiteSpace: 'nowrap',
+                boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+                transition: 'transform 0.3s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
             >
               Privacy Policy
-            </Link>
+            </a>
           </div>
         </div>
+
         {/* Mobile Menu */}
         <div
-          className={`lg:hidden overflow-hidden transition-all duration-300 ${
-            mobileMenuOpen ? 'max-h-[800px] pb-4' : 'max-h-0'
-          }`}
+          style={{
+            maxHeight: mobileMenuOpen ? '800px' : '0',
+            overflow: 'hidden',
+            transition: 'max-height 0.3s ease',
+            paddingBottom: mobileMenuOpen ? '1rem' : '0'
+          }}
         >
-          <ul className="flex flex-col gap-2 pt-4 border-t border-gray-200">
-            {/* Preschool Mobile Dropdown */}
-            <li>
-              <button
-                onClick={() => toggleDropdown('preschool')}
-                className="w-full text-left px-4 py-3 bg-yellow-400 text-gray-800 font-semibold rounded-lg hover:bg-yellow-500 transition-colors"
-              >
-                Preschool +
-              </button>
-              <div
-                className={`overflow-hidden transition-all duration-300 ${
-                  activeDropdown === 'preschool' ? 'max-h-96 mt-2' : 'max-h-0'
-                }`}
-              >
-                <div className="bg-purple-50 rounded-lg p-2 border-2 border-dashed border-purple-300">
-                  {menuItems.preschool.map((item, index) => (
-                    <Link
-                      key={index}
-                      to={item.path}
-                      className="block px-4 py-2 text-gray-800 hover:bg-purple-100 hover:text-purple-600 rounded transition-colors"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      {item.name}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </li>
-            {/* Kindergarten Mobile Dropdown */}
-            <li>
-              <button
-                onClick={() => toggleDropdown('kindergarten')}
-                className="w-full text-left px-4 py-3 text-gray-800 font-semibold hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                Kindergarten +
-              </button>
-              <div
-                className={`overflow-hidden transition-all duration-300 ${
-                  activeDropdown === 'kindergarten' ? 'max-h-96 mt-2' : 'max-h-0'
-                }`}
-              >
-                <div className="bg-purple-50 rounded-lg p-2 border-2 border-dashed border-purple-300">
-                  {menuItems.kindergarten.map((item, index) => (
-                    <Link
-                      key={index}
-                      to={item.path}
-                      className="block px-4 py-2 text-gray-800 hover:bg-purple-100 hover:text-purple-600 rounded transition-colors"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      {item.name}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </li>
-            {/* 1st Grade Mobile Dropdown */}
-            <li>
-              <button
-                onClick={() => toggleDropdown('firstGrade')}
-                className="w-full text-left px-4 py-3 text-gray-800 font-semibold hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                1st Grade +
-              </button>
-              <div
-                className={`overflow-hidden transition-all duration-300 ${
-                  activeDropdown === 'firstGrade' ? 'max-h-96 mt-2' : 'max-h-0'
-                }`}
-              >
-                <div className="bg-purple-50 rounded-lg p-2 border-2 border-dashed border-purple-300">
-                  {menuItems.firstGrade.map((item, index) => (
-                    <Link
-                      key={index}
-                      to={item.path}
-                      className="block px-4 py-2 text-gray-800 hover:bg-purple-100 hover:text-purple-600 rounded transition-colors"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      {item.name}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </li>
-            {/* 2nd Grade Mobile Dropdown */}
-            <li>
-              <button
-                onClick={() => toggleDropdown('secondGrade')}
-                className="w-full text-left px-4 py-3 text-gray-800 font-semibold hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                2nd Grade +
-              </button>
-              <div
-                className={`overflow-hidden transition-all duration-300 ${
-                  activeDropdown === 'secondGrade' ? 'max-h-96 mt-2' : 'max-h-0'
-                }`}
-              >
-                <div className="bg-purple-50 rounded-lg p-2 border-2 border-dashed border-purple-300">
-                  {menuItems.secondGrade.map((item, index) => (
-                    <Link
-                      key={index}
-                      to={item.path}
-                      className="block px-4 py-2 text-gray-800 hover:bg-purple-100 hover:text-purple-600 rounded transition-colors"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      {item.name}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </li>
-            {/* Blogs Mobile Dropdown */}
-            <li>
-              <button
-                onClick={() => toggleDropdown('blogs')}
-                className="w-full text-left px-4 py-3 text-gray-800 font-semibold hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                Blogs +
-              </button>
-              <div
-                className={`overflow-hidden transition-all duration-300 ${
-                  activeDropdown === 'blogs' ? 'max-h-96 mt-2' : 'max-h-0'
-                }`}
-              >
-                <div className="bg-purple-50 rounded-lg p-2 border-2 border-dashed border-purple-300">
-                  {menuItems.blogs.map((item, index) => (
-                    <Link
-                      key={index}
-                      to={item.path}
-                      className="block px-4 py-2 text-gray-800 hover:bg-purple-100 hover:text-purple-600 rounded transition-colors"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      {item.name}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </li>
-            <li className="flex gap-3 pt-2">
-              <button className="w-10 h-10 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full flex items-center justify-center text-white text-xl">
+          <div style={{ 
+            paddingTop: '1rem', 
+            borderTop: mobileMenuOpen ? '1px solid #e5e7eb' : 'none',
+            marginTop: mobileMenuOpen ? '0.5rem' : '0'
+          }}>
+            <MobileDropdown title="Preschool +" items={menuItems.preschool} menuKey="preschool" isHighlighted={true} />
+            <MobileDropdown title="Kindergarten +" items={menuItems.kindergarten} menuKey="kindergarten" />
+            <MobileDropdown title="1st Grade +" items={menuItems.firstGrade} menuKey="firstGrade" />
+            <MobileDropdown title="2nd Grade +" items={menuItems.secondGrade} menuKey="secondGrade" />
+            <MobileDropdown title="Blogs +" items={menuItems.blogs} menuKey="blogs" />
+
+            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
+              <button style={{
+                width: '40px',
+                height: '40px',
+                background: 'linear-gradient(135deg, #60a5fa 0%, #22d3ee 100%)',
+                borderRadius: '50%',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1.25rem',
+                flexShrink: 0
+              }}>
                 🔍
               </button>
-              <Link
-                to="/privacy-policy"
-                className="flex-1 px-5 py-2 bg-gradient-to-r from-amber-400 to-orange-500 text-white font-bold rounded-full text-center border-4 border-dashed border-amber-600"
+
+              <a
+                href="/privacy-policy"
                 onClick={() => setMobileMenuOpen(false)}
+                style={{
+                  flex: 1,
+                  padding: '0.5rem 1.25rem',
+                  background: 'linear-gradient(90deg, #fbbf24 0%, #f97316 100%)',
+                  color: '#ffffff',
+                  borderRadius: '9999px',
+                  fontWeight: 700,
+                  border: '4px dashed #ca8a04',
+                  textDecoration: 'none',
+                  textAlign: 'center',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.9rem'
+                }}
               >
                 Privacy Policy
-              </Link>
-            </li>
-          </ul>
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </nav>

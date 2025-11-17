@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import Navbar from '../components/Navbar';
 
 const KindergartenNursery = () => {
   const [hoveredCard, setHoveredCard] = useState(null);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [dropdownTimeout, setDropdownTimeout] = useState(null);
-    const navigate = useNavigate();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const dropdownOptions = {
     preschool: [
@@ -125,29 +125,29 @@ const KindergartenNursery = () => {
   ];
 
   const NavDropdown = ({ title, options, dropdownKey }) => {
-  const isActive = activeDropdown === dropdownKey;
-  
-  const handleMouseEnter = () => {
-    if (dropdownTimeout) {
-      clearTimeout(dropdownTimeout);
-      setDropdownTimeout(null);
-    }
-    setActiveDropdown(dropdownKey);
-  };
+    const isActive = activeDropdown === dropdownKey;
+    
+    const handleMouseEnter = () => {
+      if (dropdownTimeout) {
+        clearTimeout(dropdownTimeout);
+        setDropdownTimeout(null);
+      }
+      setActiveDropdown(dropdownKey);
+    };
 
-  const handleMouseLeave = () => {
-    const timeout = setTimeout(() => {
-      setActiveDropdown(null);
-    }, 300);
-    setDropdownTimeout(timeout);
-  };
-  
-  return (
-    <div
-      style={{ position: 'relative' }}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
+    const handleMouseLeave = () => {
+      const timeout = setTimeout(() => {
+        setActiveDropdown(null);
+      }, 300);
+      setDropdownTimeout(timeout);
+    };
+    
+    return (
+      <div
+        style={{ position: 'relative' }}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
         <a
           href="#"
           style={{
@@ -209,21 +209,71 @@ const KindergartenNursery = () => {
     );
   };
 
+  const MobileNavItem = ({ title, options }) => {
+    const [isOpen, setIsOpen] = useState(false);
+
+    return (
+      <div style={{ borderBottom: '1px solid #e5e7eb' }}>
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          style={{
+            width: '100%',
+            padding: '1rem',
+            textAlign: 'left',
+            fontWeight: 600,
+            color: '#374151',
+            backgroundColor: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            fontSize: '1rem'
+          }}
+        >
+          {title}
+          <span style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.3s' }}>▼</span>
+        </button>
+        {isOpen && (
+          <div style={{ backgroundColor: '#f9fafb', padding: '0.5rem 0' }}>
+            {options.map((option, idx) => (
+              <a
+                key={idx}
+                href={option.url}
+                style={{
+                  display: 'block',
+                  padding: '0.75rem 1.5rem',
+                  color: '#6b7280',
+                  textDecoration: 'none',
+                  fontSize: '0.95rem'
+                }}
+              >
+                {option.label}
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#ffffff' }}>
+    <Navbar />
       {/* Header/Navigation */}
-      <header style={{ backgroundColor: '#ffffff', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', position: 'sticky', top: 0, zIndex: 50 }}>
-        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1.5rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '90px' }}>
+      {/* <header style={{ backgroundColor: '#ffffff', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', position: 'sticky', top: 0, zIndex: 50 }}>
+        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '70px' }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <img 
                 src="/wowkidsworksheet.png" 
                 alt="WowKids Worksheets" 
-                style={{ height: '140px', width: 'auto', cursor: 'pointer' }}
+                style={{ height: window.innerWidth <= 768 ? '80px' : '140px', width: 'auto', cursor: 'pointer' }}
               />
             </div>
 
-            <nav style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {/* Desktop Navigation 
+            <nav style={{ display: window.innerWidth <= 1024 ? 'none' : 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <NavDropdown title="Preschool +" options={dropdownOptions.preschool} dropdownKey="preschool" />
               <NavDropdown title="Kindergarten +" options={dropdownOptions.kindergarten} dropdownKey="kindergarten" />
               <NavDropdown title="1st Grade +" options={dropdownOptions.firstGrade} dropdownKey="firstGrade" />
@@ -264,26 +314,93 @@ const KindergartenNursery = () => {
                 Privacy Policy
               </button>
             </nav>
+
+            {/* Mobile Menu Button 
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              style={{
+                display: window.innerWidth <= 1024 ? 'flex' : 'none',
+                flexDirection: 'column',
+                gap: '4px',
+                padding: '0.5rem',
+                backgroundColor: 'transparent',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              <div style={{ width: '24px', height: '3px', backgroundColor: '#374151', borderRadius: '2px', transition: 'all 0.3s' }}></div>
+              <div style={{ width: '24px', height: '3px', backgroundColor: '#374151', borderRadius: '2px', transition: 'all 0.3s' }}></div>
+              <div style={{ width: '24px', height: '3px', backgroundColor: '#374151', borderRadius: '2px', transition: 'all 0.3s' }}></div>
+            </button>
           </div>
+
+          {/* Mobile Menu 
+          {mobileMenuOpen && (
+            <div style={{
+              display: window.innerWidth <= 1024 ? 'block' : 'none',
+              backgroundColor: '#ffffff',
+              borderTop: '1px solid #e5e7eb',
+              paddingBottom: '1rem'
+            }}>
+              <MobileNavItem title="Preschool +" options={dropdownOptions.preschool} />
+              <MobileNavItem title="Kindergarten +" options={dropdownOptions.kindergarten} />
+              <MobileNavItem title="1st Grade +" options={dropdownOptions.firstGrade} />
+              <MobileNavItem title="2nd Grade +" options={dropdownOptions.secondGrade} />
+              <MobileNavItem title="Blogs +" options={dropdownOptions.blogs} />
+              
+              <div style={{ padding: '1rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <button style={{ 
+                  flex: '1',
+                  minWidth: '120px',
+                  padding: '0.75rem 1rem', 
+                  background: 'linear-gradient(135deg, #60a5fa 0%, #22d3ee 100%)', 
+                  color: '#ffffff',
+                  borderRadius: '9999px',
+                  fontWeight: 700,
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '0.95rem',
+                  boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
+                }}>
+                  🔍 Search
+                </button>
+                <button style={{ 
+                  flex: '1',
+                  minWidth: '120px',
+                  padding: '0.75rem 1rem', 
+                  background: 'linear-gradient(90deg, #fbbf24 0%, #f97316 100%)', 
+                  color: '#ffffff',
+                  borderRadius: '9999px',
+                  fontWeight: 700,
+                  border: '3px dashed #ca8a04',
+                  cursor: 'pointer',
+                  fontSize: '0.95rem',
+                  boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
+                }}>
+                  Privacy Policy
+                </button>
+              </div>
+            </div>
+          )}
         </div>
-      </header>
+      </header> */}
 
       {/* Hero Section */}
       <section style={{ 
         position: 'relative', 
         background: 'linear-gradient(135deg, #fef3c7 0%, #fce7f3 40%, #e0e7ff 70%, #dbeafe 100%)', 
-        padding: '5rem 1.5rem',
+        padding: window.innerWidth <= 768 ? '3rem 1rem' : '5rem 1.5rem',
         overflow: 'hidden',
-        minHeight: '400px'
+        minHeight: window.innerWidth <= 768 ? '300px' : '400px'
       }}>
-        <div style={{ position: 'absolute', top: '2.5rem', left: '5rem', fontSize: '4rem' }}>🎨</div>
-        <div style={{ position: 'absolute', top: '5rem', right: '10rem', fontSize: '3.5rem' }}>🧸</div>
-        <div style={{ position: 'absolute', bottom: '5rem', left: '2.5rem', fontSize: '3rem' }}>⭐</div>
-        <div style={{ position: 'absolute', bottom: '2.5rem', right: '5rem', fontSize: '4rem' }}>🎈</div>
+        <div style={{ position: 'absolute', top: '2.5rem', left: window.innerWidth <= 768 ? '1rem' : '5rem', fontSize: window.innerWidth <= 768 ? '2.5rem' : '4rem' }}>🎨</div>
+        <div style={{ position: 'absolute', top: '5rem', right: window.innerWidth <= 768 ? '1rem' : '10rem', fontSize: window.innerWidth <= 768 ? '2rem' : '3.5rem' }}>🧸</div>
+        <div style={{ position: 'absolute', bottom: '5rem', left: window.innerWidth <= 768 ? '0.5rem' : '2.5rem', fontSize: window.innerWidth <= 768 ? '2rem' : '3rem' }}>⭐</div>
+        <div style={{ position: 'absolute', bottom: '2.5rem', right: window.innerWidth <= 768 ? '1rem' : '5rem', fontSize: window.innerWidth <= 768 ? '2.5rem' : '4rem' }}>🎈</div>
 
         <div style={{ maxWidth: '1280px', margin: '0 auto', position: 'relative', zIndex: 10 }}>
           <div style={{ maxWidth: '42rem' }}>
-            <h1 style={{ fontSize: '4.5rem', fontWeight: 900, color: '#1f2937', marginBottom: '1.5rem', lineHeight: 1.1 }}>
+            <h1 style={{ fontSize: window.innerWidth <= 768 ? '2.5rem' : window.innerWidth <= 1024 ? '3.5rem' : '4.5rem', fontWeight: 900, color: '#1f2937', marginBottom: '1.5rem', lineHeight: 1.1 }}>
               Nursery<br />
               <span style={{ 
                 background: 'linear-gradient(90deg, #ec4899 0%, #f472b6 50%, #fb923c 100%)', 
@@ -294,7 +411,7 @@ const KindergartenNursery = () => {
                 Worksheets
               </span>
             </h1>
-            <p style={{ fontSize: '1.25rem', color: '#6b7280', marginTop: '1rem' }}>
+            <p style={{ fontSize: window.innerWidth <= 768 ? '1rem' : '1.25rem', color: '#6b7280', marginTop: '1rem' }}>
               Fun and colorful learning activities for little learners. Perfect for introducing basic concepts through play and exploration.
             </p>
           </div>
@@ -302,10 +419,10 @@ const KindergartenNursery = () => {
       </section>
 
       {/* Main Content Section */}
-      <section style={{ background: 'linear-gradient(180deg, #ec4899 0%, #f472b6 50%, #ec4899 100%)', padding: '4rem 1.5rem' }}>
+      <section style={{ background: 'linear-gradient(180deg, #ec4899 0%, #f472b6 50%, #ec4899 100%)', padding: window.innerWidth <= 768 ? '2rem 1rem' : '4rem 1.5rem' }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
           <h2 style={{ 
-            fontSize: '3rem', 
+            fontSize: window.innerWidth <= 768 ? '2rem' : window.innerWidth <= 1024 ? '2.5rem' : '3rem', 
             fontWeight: 'bold', 
             textAlign: 'center', 
             marginBottom: '2rem',
@@ -317,14 +434,14 @@ const KindergartenNursery = () => {
             Nursery Learning Activities
           </h2>
 
-          <p style={{ color: '#ffffff', textAlign: 'center', fontSize: '1.125rem', maxWidth: '80rem', margin: '0 auto 4rem', lineHeight: 1.7 }}>
+          <p style={{ color: '#ffffff', textAlign: 'center', fontSize: window.innerWidth <= 768 ? '1rem' : '1.125rem', maxWidth: '80rem', margin: '0 auto 4rem', lineHeight: 1.7, padding: '0 1rem' }}>
             Our nursery worksheets introduce young children to foundational learning concepts through engaging, age-appropriate 
             activities. Each worksheet is designed with bright colors and simple tasks to capture attention and build confidence 
             in early learners aged 2-3 years.
           </p>
 
           {/* Cards Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '2.5rem', maxWidth: '1400px', margin: '0 auto' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 640 ? '1fr' : window.innerWidth <= 1024 ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(260px, 1fr))', gap: window.innerWidth <= 768 ? '1.5rem' : '2.5rem', maxWidth: '1400px', margin: '0 auto' }}>
             {nurseryWorksheets.map((worksheet) => (
               <div
                 key={worksheet.id}
@@ -375,7 +492,7 @@ const KindergartenNursery = () => {
                         borderRadius: '9999px',
                         fontWeight: 'bold',
                         color: '#ffffff',
-                        fontSize: '1.125rem',
+                        fontSize: window.innerWidth <= 768 ? '1rem' : '1.125rem',
                         background: worksheet.gradient,
                         border: 'none',
                         cursor: 'pointer',
@@ -396,7 +513,7 @@ const KindergartenNursery = () => {
                         background: 'linear-gradient(90deg, #fbbf24 0%, #f97316 50%, #fbbf24 100%)',
                         color: '#ffffff',
                         fontWeight: 'bold',
-                        fontSize: '1.125rem',
+                        fontSize: window.innerWidth <= 768 ? '1rem' : '1.125rem',
                         borderRadius: '0 0 1.5rem 1.5rem',
                         border: 'none',
                         cursor: 'pointer',
@@ -415,24 +532,24 @@ const KindergartenNursery = () => {
       </section>
 
       {/* Footer */}
-      <section style={{ background: 'linear-gradient(180deg, #1e3a8a 0%, #312e81 100%)', padding: '4rem 1.5rem' }}>
+      <section style={{ background: 'linear-gradient(180deg, #1e3a8a 0%, #312e81 100%)', padding: window.innerWidth <= 768 ? '2rem 1rem' : '4rem 1.5rem' }}>
         <div style={{ maxWidth: '80rem', margin: '0 auto', textAlign: 'center' }}>
           <div style={{ marginBottom: '2rem' }}>
-            <div style={{ display: 'inline-block', backgroundColor: '#ffffff', borderRadius: '1rem', padding: '1.25rem 1.5rem', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+            <div style={{ display: 'inline-block', backgroundColor: '#ffffff', borderRadius: '1rem', padding: window.innerWidth <= 768 ? '0.75rem 1rem' : '1.25rem 1.5rem', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
               <img 
                 src="wowkidsworksheet.png" 
                 alt="WowKids Worksheets" 
-                style={{ height: '140px', width: 'auto' }}
+                style={{ height: window.innerWidth <= 768 ? '80px' : '140px', width: 'auto' }}
               />
             </div>
           </div>
 
-          <p style={{ color: '#ffffff', fontSize: '1.125rem', lineHeight: 1.7, marginBottom: '2rem' }}>
+          <p style={{ color: '#ffffff', fontSize: window.innerWidth <= 768 ? '1rem' : '1.125rem', lineHeight: 1.7, marginBottom: '2rem' }}>
             Online worksheets for kids - free worksheets, worksheets for adults, worksheets for kids, worksheets for girls, 
             worksheets for boys, worksheets for parents, worksheets for teachers and much more.
           </p>
 
-          <p style={{ color: '#67e8f9', fontSize: '1.125rem', marginBottom: '2rem' }}>
+          <p style={{ color: '#67e8f9', fontSize: window.innerWidth <= 768 ? '1rem' : '1.125rem', marginBottom: '2rem', wordBreak: 'break-word' }}>
             Contact Us: <span style={{ fontWeight: 600 }}>support@wowkidsworksheet.com</span>
           </p>
 
@@ -448,12 +565,12 @@ const KindergartenNursery = () => {
                 key={idx}
                 onClick={() => window.open(social.url, '_blank')}
                 style={{ 
-                  width: '56px', 
-                  height: '56px', 
+                  width: window.innerWidth <= 768 ? '48px' : '56px', 
+                  height: window.innerWidth <= 768 ? '48px' : '56px', 
                   borderRadius: '50%',
                   background: social.gradient,
                   color: '#ffffff',
-                  fontSize: '1.5rem',
+                  fontSize: window.innerWidth <= 768 ? '1.25rem' : '1.5rem',
                   border: 'none',
                   cursor: 'pointer',
                   boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
@@ -470,7 +587,7 @@ const KindergartenNursery = () => {
             ))}
           </div>
 
-          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.875rem' }}>
+          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: window.innerWidth <= 768 ? '0.8rem' : '0.875rem', padding: '0 1rem' }}>
             © Copyright 2025 <span style={{ fontWeight: 600, color: '#ffffff' }}>WowKids Worksheet</span> - All Rights Reserved
           </p>
         </div>
