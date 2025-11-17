@@ -1,11 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Navbar from '../components/Navbar';
 
 const PreschoolScience = () => {
   const [hoveredCard, setHoveredCard] = useState(null);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [dropdownTimeout, setDropdownTimeout] = useState(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const dropdownOptions = {
     preschool: [
@@ -15,7 +27,6 @@ const PreschoolScience = () => {
       { label: 'Science', url: '/preschool-science' },
       { label: 'Homework', url: '/preschool-homework' },
       { label: 'Practice', url: '/preschool-practice' },
-    //   { label: 'Activity', url: '#activity' }
     ],
     kindergarten: [
       { label: 'Nursery', url: '/kindergarten-nursery' },
@@ -129,30 +140,30 @@ const PreschoolScience = () => {
     window.location.hash = url;
   };
 
- const NavDropdown = ({ title, options, dropdownKey }) => {
-  const isActive = activeDropdown === dropdownKey;
-  
-  const handleMouseEnter = () => {
-    if (dropdownTimeout) {
-      clearTimeout(dropdownTimeout);
-      setDropdownTimeout(null);
-    }
-    setActiveDropdown(dropdownKey);
-  };
+  const NavDropdown = ({ title, options, dropdownKey }) => {
+    const isActive = activeDropdown === dropdownKey;
+    
+    const handleMouseEnter = () => {
+      if (dropdownTimeout) {
+        clearTimeout(dropdownTimeout);
+        setDropdownTimeout(null);
+      }
+      setActiveDropdown(dropdownKey);
+    };
 
-  const handleMouseLeave = () => {
-    const timeout = setTimeout(() => {
-      setActiveDropdown(null);
-    }, 300);
-    setDropdownTimeout(timeout);
-  };
-  
-  return (
-    <div
-      style={{ position: 'relative' }}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
+    const handleMouseLeave = () => {
+      const timeout = setTimeout(() => {
+        setActiveDropdown(null);
+      }, 300);
+      setDropdownTimeout(timeout);
+    };
+    
+    return (
+      <div
+        style={{ position: 'relative' }}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
         <button
           style={{
             padding: '0.5rem 1rem',
@@ -220,83 +231,213 @@ const PreschoolScience = () => {
     );
   };
 
+  const MobileMenu = ({ dropdownOptions, handleNavigation, setIsMobileMenuOpen }) => {
+    const [expandedSection, setExpandedSection] = useState(null);
+
+    const sections = [
+      { key: 'preschool', title: 'Preschool' },
+      { key: 'kindergarten', title: 'Kindergarten' },
+      { key: 'firstGrade', title: '1st Grade' },
+      { key: 'secondGrade', title: '2nd Grade' },
+      { key: 'blogs', title: 'Blogs' }
+    ];
+
+    return (
+      <div>
+        {sections.map(section => (
+          <div key={section.key} style={{ marginBottom: '1rem' }}>
+            <button
+              onClick={() => setExpandedSection(expandedSection === section.key ? null : section.key)}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                background: 'linear-gradient(90deg, #f3e8ff 0%, #fce7f3 100%)',
+                border: '2px solid #e9d5ff',
+                borderRadius: '0.5rem',
+                fontWeight: 600,
+                color: '#9333ea',
+                cursor: 'pointer',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                fontSize: '1rem'
+              }}
+            >
+              {section.title}
+              <span>{expandedSection === section.key ? '−' : '+'}</span>
+            </button>
+            {expandedSection === section.key && (
+              <div style={{ marginTop: '0.5rem', paddingLeft: '1rem' }}>
+                {dropdownOptions[section.key].map((option, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      handleNavigation(option.url);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    style={{
+                      display: 'block',
+                      width: '100%',
+                      padding: '0.75rem',
+                      textAlign: 'left',
+                      background: 'none',
+                      border: 'none',
+                      color: '#374151',
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      fontSize: '0.95rem'
+                    }}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+        <button 
+          onClick={() => {
+            handleNavigation('#privacy-policy');
+            setIsMobileMenuOpen(false);
+          }}
+          style={{ 
+            width: '100%',
+            marginTop: '1rem',
+            padding: '0.75rem 1.5rem', 
+            background: 'linear-gradient(90deg, #fbbf24 0%, #f97316 100%)', 
+            color: '#ffffff',
+            borderRadius: '0.5rem',
+            fontWeight: 700,
+            border: 'none',
+            cursor: 'pointer',
+            fontSize: '1rem',
+            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
+          }}
+        >
+          Privacy Policy
+        </button>
+      </div>
+    );
+  };
+
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#ffffff' }}>
+    <Navbar />
       {/* Header/Navigation */}
-      <header style={{ backgroundColor: '#ffffff', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', position: 'sticky', top: 0, zIndex: 50 }}>
+      {/* <header style={{ backgroundColor: '#ffffff', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', position: 'sticky', top: 0, zIndex: 50 }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1.5rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '90px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: isMobile ? '70px' : '90px' }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <img 
                 src="/wowkidsworksheet.png" 
                 alt="WowKids Worksheets" 
-                style={{ height: '140px', width: 'auto', cursor: 'pointer' }}
+                style={{ height: isMobile ? '80px' : '140px', width: 'auto', cursor: 'pointer' }}
                 onClick={() => handleNavigation('/')}
               />
             </div>
 
-            <nav style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <NavDropdown title="Preschool +" options={dropdownOptions.preschool} dropdownKey="preschool" />
-              <NavDropdown title="Kindergarten +" options={dropdownOptions.kindergarten} dropdownKey="kindergarten" />
-              <NavDropdown title="1st Grade +" options={dropdownOptions.firstGrade} dropdownKey="firstGrade" />
-              <NavDropdown title="2nd Grade +" options={dropdownOptions.secondGrade} dropdownKey="secondGrade" />
-              <NavDropdown title="Blogs +" options={dropdownOptions.blogs} dropdownKey="blogs" />
-              
-              <button style={{ 
-                marginLeft: '1rem', 
-                width: '50px', 
-                height: '50px', 
-                background: 'linear-gradient(135deg, #60a5fa 0%, #22d3ee 100%)', 
-                borderRadius: '50%', 
-                border: 'none',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#ffffff',
-                fontSize: '2rem',
-                boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
-              }}>
-                🔍
-              </button>
-              <button 
-                onClick={() => handleNavigation('#privacy-policy')}
-                style={{ 
-                  marginLeft: '0.5rem', 
-                  padding: '0.75rem 1.75rem', 
-                  background: 'linear-gradient(90deg, #fbbf24 0%, #f97316 100%)', 
-                  color: '#ffffff',
-                  borderRadius: '9999px',
-                  fontWeight: 700,
-                  border: '3px dashed #ca8a04',
+            {/* Mobile Menu Button 
+            {isMobile && (
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                style={{
+                  padding: '0.5rem',
+                  background: 'none',
+                  border: 'none',
                   cursor: 'pointer',
-                  fontSize: '1rem',
-                  boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
+                  fontSize: '1.75rem'
                 }}
               >
-                Privacy Policy
+                {isMobileMenuOpen ? '✕' : '☰'}
               </button>
-            </nav>
+            )}
+
+            {/* Desktop Navigation
+            {!isMobile && (
+              <nav style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <NavDropdown title="Preschool +" options={dropdownOptions.preschool} dropdownKey="preschool" />
+                <NavDropdown title="Kindergarten +" options={dropdownOptions.kindergarten} dropdownKey="kindergarten" />
+                <NavDropdown title="1st Grade +" options={dropdownOptions.firstGrade} dropdownKey="firstGrade" />
+                <NavDropdown title="2nd Grade +" options={dropdownOptions.secondGrade} dropdownKey="secondGrade" />
+                <NavDropdown title="Blogs +" options={dropdownOptions.blogs} dropdownKey="blogs" />
+                
+                <button style={{ 
+                  marginLeft: '1rem', 
+                  width: '50px', 
+                  height: '50px', 
+                  background: 'linear-gradient(135deg, #60a5fa 0%, #22d3ee 100%)', 
+                  borderRadius: '50%', 
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#ffffff',
+                  fontSize: '2rem',
+                  boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
+                }}>
+                  🔍
+                </button>
+                <button 
+                  onClick={() => handleNavigation('#privacy-policy')}
+                  style={{ 
+                    marginLeft: '0.5rem', 
+                    padding: '0.75rem 1.75rem', 
+                    background: 'linear-gradient(90deg, #fbbf24 0%, #f97316 100%)', 
+                    color: '#ffffff',
+                    borderRadius: '9999px',
+                    fontWeight: 700,
+                    border: '3px dashed #ca8a04',
+                    cursor: 'pointer',
+                    fontSize: '1rem',
+                    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
+                  }}
+                >
+                  Privacy Policy
+                </button>
+              </nav>
+            )}
           </div>
+
+          {/* Mobile Menu 
+          {isMobile && isMobileMenuOpen && (
+            <div style={{
+              position: 'absolute',
+              top: '70px',
+              left: 0,
+              right: 0,
+              backgroundColor: '#ffffff',
+              boxShadow: '0 10px 25px -5px rgba(0,0,0,0.2)',
+              padding: '1rem',
+              maxHeight: '80vh',
+              overflowY: 'auto'
+            }}>
+              <MobileMenu 
+                dropdownOptions={dropdownOptions} 
+                handleNavigation={handleNavigation}
+                setIsMobileMenuOpen={setIsMobileMenuOpen}
+              />
+            </div>
+          )}
         </div>
-      </header>
+      </header> */}
 
       {/* Hero Section */}
       <section style={{ 
         position: 'relative', 
         background: 'linear-gradient(135deg, #fef3c7 0%, #fce7f3 40%, #e0e7ff 70%, #dbeafe 100%)', 
-        padding: '5rem 1.5rem',
+        padding: isMobile ? '3rem 1rem' : '5rem 1.5rem',
         overflow: 'hidden',
-        minHeight: '400px'
+        minHeight: isMobile ? '300px' : '400px'
       }}>
-        <div style={{ position: 'absolute', top: '2.5rem', left: '5rem', fontSize: '4rem' }}>🔬</div>
-        <div style={{ position: 'absolute', top: '5rem', right: '10rem', fontSize: '3.5rem' }}>🌱</div>
-        <div style={{ position: 'absolute', bottom: '5rem', left: '2.5rem', fontSize: '3rem' }}>🦋</div>
-        <div style={{ position: 'absolute', bottom: '2.5rem', right: '5rem', fontSize: '4rem' }}>🌍</div>
+        <div style={{ position: 'absolute', top: isMobile ? '1rem' : '2.5rem', left: isMobile ? '1rem' : '5rem', fontSize: isMobile ? '2.5rem' : '4rem' }}>🔬</div>
+        <div style={{ position: 'absolute', top: isMobile ? '2rem' : '5rem', right: isMobile ? '1rem' : '10rem', fontSize: isMobile ? '2rem' : '3.5rem' }}>🌱</div>
+        <div style={{ position: 'absolute', bottom: isMobile ? '2rem' : '5rem', left: isMobile ? '1rem' : '2.5rem', fontSize: isMobile ? '2rem' : '3rem' }}>🦋</div>
+        <div style={{ position: 'absolute', bottom: isMobile ? '1rem' : '2.5rem', right: isMobile ? '1rem' : '5rem', fontSize: isMobile ? '2.5rem' : '4rem' }}>🌍</div>
 
         <div style={{ maxWidth: '1280px', margin: '0 auto', position: 'relative', zIndex: 10 }}>
           <div style={{ maxWidth: '42rem' }}>
-            <h1 style={{ fontSize: '4.5rem', fontWeight: 900, color: '#1f2937', marginBottom: '1.5rem', lineHeight: 1.1 }}>
+            <h1 style={{ fontSize: isMobile ? '2.5rem' : '4.5rem', fontWeight: 900, color: '#1f2937', marginBottom: '1.5rem', lineHeight: 1.1 }}>
               Preschool<br />
               <span style={{ 
                 background: 'linear-gradient(90deg, #9333ea 0%, #ec4899 50%, #3b82f6 100%)', 
@@ -307,7 +448,7 @@ const PreschoolScience = () => {
                 Science Worksheets
               </span>
             </h1>
-            <p style={{ fontSize: '1.25rem', color: '#6b7280', marginTop: '1rem' }}>
+            <p style={{ fontSize: isMobile ? '1rem' : '1.25rem', color: '#6b7280', marginTop: '1rem' }}>
               Exciting science worksheets that spark curiosity about the natural world, animals, plants, and basic scientific concepts.
             </p>
           </div>
@@ -315,10 +456,10 @@ const PreschoolScience = () => {
       </section>
 
       {/* Main Content Section */}
-      <section style={{ background: 'linear-gradient(180deg, #1e3a8a 0%, #4c1d95 50%, #1e3a8a 100%)', padding: '4rem 1.5rem' }}>
+      <section style={{ background: 'linear-gradient(180deg, #1e3a8a 0%, #4c1d95 50%, #1e3a8a 100%)', padding: isMobile ? '2rem 1rem' : '4rem 1.5rem' }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
           <h2 style={{ 
-            fontSize: '3rem', 
+            fontSize: isMobile ? '2rem' : '3rem', 
             fontWeight: 'bold', 
             textAlign: 'center', 
             marginBottom: '2rem',
@@ -330,12 +471,12 @@ const PreschoolScience = () => {
             Science Worksheets Collection
           </h2>
 
-          <p style={{ color: '#ffffff', textAlign: 'center', fontSize: '1.125rem', maxWidth: '80rem', margin: '0 auto 4rem', lineHeight: 1.7 }}>
+          <p style={{ color: '#ffffff', textAlign: 'center', fontSize: isMobile ? '1rem' : '1.125rem', maxWidth: '80rem', margin: '0 auto 4rem', lineHeight: 1.7, padding: isMobile ? '0 1rem' : '0' }}>
             Our preschool science worksheets introduce young learners to the wonders of the natural world. From exploring animals and plants to understanding weather and seasons, these activities encourage observation and curiosity. Each worksheet is designed to make science accessible and exciting for preschoolers.
           </p>
 
           {/* Cards Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '2.5rem', maxWidth: '1400px', margin: '0 auto' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(260px, 1fr))', gap: isMobile ? '1.5rem' : '2.5rem', maxWidth: '1400px', margin: '0 auto' }}>
             {scienceWorksheets.map((worksheet) => (
               <div
                 key={worksheet.id}
@@ -428,25 +569,25 @@ const PreschoolScience = () => {
       </section>
 
       {/* Footer */}
-      <section style={{ background: 'linear-gradient(180deg, #1e3a8a 0%, #312e81 100%)', padding: '4rem 1.5rem' }}>
+      <section style={{ background: 'linear-gradient(180deg, #1e3a8a 0%, #312e81 100%)', padding: isMobile ? '2rem 1rem' : '4rem 1.5rem' }}>
         <div style={{ maxWidth: '80rem', margin: '0 auto', textAlign: 'center' }}>
           <div style={{ marginBottom: '2rem' }}>
             <div style={{ display: 'inline-block', backgroundColor: '#ffffff', borderRadius: '1rem', padding: '1.25rem 1.5rem', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
               <img 
                 src="wowkidsworksheet.png" 
                 alt="WowKids Worksheets" 
-                style={{ height: '140px', width: 'auto' }}
+                style={{ height: isMobile ? '80px' : '140px', width: 'auto' }}
               />
             </div>
           </div>
 
-          <p style={{ color: '#ffffff', fontSize: '1.125rem', lineHeight: 1.7, marginBottom: '2rem' }}>
+          <p style={{ color: '#ffffff', fontSize: isMobile ? '1rem' : '1.125rem', lineHeight: 1.7, marginBottom: '2rem', padding: isMobile ? '0 0.5rem' : '0' }}>
             Online worksheets for kids - free worksheets, worksheets for adults, worksheets for kids, worksheets for girls, 
             worksheets for boys, worksheets for parents, worksheets for teachers and much more.
           </p>
 
-          <p style={{ color: '#67e8f9', fontSize: '1.125rem', marginBottom: '2rem' }}>
-            Contact Us: <span style={{ fontWeight: 600 }}>support@wowkidsworksheet.com</span>
+          <p style={{ color: '#67e8f9', fontSize: isMobile ? '1rem' : '1.125rem', marginBottom: '2rem', wordBreak: 'break-word' }}>
+            Contact Us: <span style={{ fontWeight: 600 }}>support@wowkidsworksheets.com</span>
           </p>
 
           <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '3rem', flexWrap: 'wrap' }}>
@@ -461,12 +602,12 @@ const PreschoolScience = () => {
                 key={idx}
                 onClick={() => window.open(social.url, '_blank')}
                 style={{ 
-                  width: '56px', 
-                  height: '56px', 
+                  width: isMobile ? '48px' : '56px', 
+                  height: isMobile ? '48px' : '56px', 
                   borderRadius: '50%',
                   background: social.gradient,
                   color: '#ffffff',
-                  fontSize: '1.5rem',
+                  fontSize: isMobile ? '1.25rem' : '1.5rem',
                   border: 'none',
                   cursor: 'pointer',
                   boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
@@ -483,8 +624,8 @@ const PreschoolScience = () => {
             ))}
           </div>
 
-          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.875rem' }}>
-            © Copyright 2025 <span style={{ fontWeight: 600, color: '#ffffff' }}>WowKids Worksheet</span> - All Rights Reserved
+          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.875rem', padding: isMobile ? '0 1rem' : '0' }}>
+            © Copyright 2025 <span style={{ fontWeight: 600, color: '#ffffff' }}>WowKids Worksheets</span> - All Rights Reserved
           </p>
         </div>
       </section>

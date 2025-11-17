@@ -11,6 +11,7 @@ import Kindergarten from './pages/Kindergarten.jsx';
 import KindergartenNursery from './pages/KindergartenNursery.jsx';
 import KindergartenLKG from './pages/KindergartenLKG.jsx';
 import KindergartenUKG from './pages/KindergartenUKG.jsx';
+// import PrivacyPolicy from './pages/PrivacyPolicy.jsx';
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
         <Route path="/kindergarten-nursery" element={<KindergartenNursery />} />
         <Route path="/kindergarten-lkg" element={<KindergartenLKG />} />
         <Route path="/kindergarten-ukg" element={<KindergartenUKG />} />
+        {/* <Route path="/privacy-policy" element={<PrivacyPolicy />} /> */}
         <Route path="*" element={<div>404 Page Not Found</div>} />
       </Routes>
     </div>

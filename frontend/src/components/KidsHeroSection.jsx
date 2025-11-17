@@ -1,8 +1,33 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function KidsHeroSection() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const scrollToWorksheets = () => {
+    const worksheetsSection = document.getElementById('worksheets-section');
+    if (worksheetsSection) {
+      worksheetsSection.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
+  };
+
   return (
-    <section className="relative bg-gradient-to-br from-amber-100 via-pink-100 via-indigo-100 to-blue-100 py-20 px-6 overflow-hidden min-h-[600px]">
+    <section style={{
+      position: 'relative',
+      background: 'linear-gradient(135deg, #fef3c7 0%, #fce7f3 40%, #e0e7ff 70%, #dbeafe 100%)',
+      padding: isMobile ? '3rem 1.5rem' : '5rem 1.5rem',
+      overflow: 'hidden',
+      minHeight: isMobile ? '400px' : '600px'
+    }}>
       <style>{`
         @keyframes float {
           0%, 100% { transform: translateY(0px); }
@@ -28,41 +53,109 @@ export default function KidsHeroSection() {
         .animate-bounce-delay-3 { animation: bounce 2.8s ease-in-out infinite 1.5s; }
         .animate-spin-slow { animation: spin 8s linear infinite; }
         .animate-shimmer { animation: shimmer 3s ease-in-out infinite; }
-        .text-shadow-fun { text-shadow: 4px 4px 0px rgba(255,255,255,0.8), 6px 6px 0px rgba(0,0,0,0.1); }
-        .text-shadow-soft { text-shadow: 2px 2px 0px rgba(255,255,255,0.8); }
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-25px); }
+        }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
       `}</style>
 
-      {/* Animated decorative elements */}
-      <div className="absolute top-10 left-20 text-8xl animate-bounce drop-shadow-lg">⭐</div>
-      <div className="absolute top-20 right-40 text-8xl animate-float drop-shadow-lg">🌈</div>
-      <div className="absolute top-32 right-32 text-6xl animate-float-delay drop-shadow-lg">☁️</div>
-      <div className="absolute bottom-20 left-10 text-7xl animate-float-delay-2 drop-shadow-lg">☁️</div>
-      <div className="absolute bottom-32 right-20 text-9xl animate-wiggle drop-shadow-lg">🥑</div>
-      <div className="absolute bottom-10 right-10 text-9xl animate-wiggle-delay drop-shadow-lg">🐊</div>
-      <div className="absolute top-40 right-60 text-8xl animate-bounce-delay drop-shadow-lg">⭐</div>
-      <div className="absolute top-60 right-140 text-7xl animate-bounce-delay-2 drop-shadow-lg">⭐</div>
-      <div className="absolute top-48 left-60 text-7xl animate-spin-slow drop-shadow-lg">🎨</div>
-      <div className="absolute bottom-40 right-110 text-6xl animate-bounce-delay-3 drop-shadow-lg">🎈</div>
-      <div className="absolute top-72 right-80 text-7xl animate-float-delay-3 drop-shadow-lg">🦋</div>
+      {/* Desktop Animated decorative elements */}
+      {!isMobile && (
+        <>
+          <div style={{ position: 'absolute', top: '2.5rem', left: '5rem', fontSize: '5rem', animation: 'bounce 2s ease-in-out infinite', filter: 'drop-shadow(0 10px 8px rgba(0,0,0,0.1))' }}>⭐</div>
+          <div style={{ position: 'absolute', top: '5rem', right: '10rem', fontSize: '5rem' }} className="animate-float">🌈</div>
+          <div style={{ position: 'absolute', top: '8rem', right: '8rem', fontSize: '3.75rem' }} className="animate-float-delay">☁️</div>
+          <div style={{ position: 'absolute', bottom: '5rem', left: '2.5rem', fontSize: '4.375rem' }} className="animate-float-delay-2">☁️</div>
+          <div style={{ position: 'absolute', bottom: '8rem', right: '5rem', fontSize: '5.625rem' }} className="animate-wiggle">🥑</div>
+          <div style={{ position: 'absolute', bottom: '2.5rem', right: '2.5rem', fontSize: '5.625rem' }} className="animate-wiggle-delay">🐊</div>
+          <div style={{ position: 'absolute', top: '10rem', right: '15rem', fontSize: '5rem' }} className="animate-bounce-delay">⭐</div>
+          <div style={{ position: 'absolute', top: '15rem', left: '8rem', fontSize: '4.375rem' }} className="animate-bounce-delay-2">⭐</div>
+          <div style={{ position: 'absolute', top: '12rem', left: '15rem', fontSize: '4.375rem' }} className="animate-spin-slow">🎨</div>
+          <div style={{ position: 'absolute', bottom: '10rem', right: '27.5rem', fontSize: '3.75rem' }} className="animate-bounce-delay-3">🎈</div>
+          <div style={{ position: 'absolute', top: '18rem', right: '20rem', fontSize: '4.375rem' }} className="animate-float-delay-3">🦋</div>
+        </>
+      )}
+
+      {/* Mobile Animated decorative elements - fewer and smaller */}
+      {isMobile && (
+        <>
+          <div style={{ position: 'absolute', top: '1rem', left: '1rem', fontSize: '2.5rem', animation: 'bounce 2s ease-in-out infinite', filter: 'drop-shadow(0 4px 3px rgba(0,0,0,0.1))' }}>⭐</div>
+          <div style={{ position: 'absolute', top: '2rem', right: '1rem', fontSize: '2.5rem' }} className="animate-float">🌈</div>
+          <div style={{ position: 'absolute', top: '5rem', right: '0.5rem', fontSize: '2rem' }} className="animate-float-delay">☁️</div>
+          <div style={{ position: 'absolute', bottom: '3rem', left: '0.5rem', fontSize: '2rem' }} className="animate-float-delay-2">☁️</div>
+          <div style={{ position: 'absolute', bottom: '5rem', right: '1rem', fontSize: '3rem' }} className="animate-wiggle">🥑</div>
+          <div style={{ position: 'absolute', bottom: '1rem', right: '0.5rem', fontSize: '3.5rem' }} className="animate-wiggle-delay">🐊</div>
+          <div style={{ position: 'absolute', top: '8rem', left: '0.5rem', fontSize: '2rem' }} className="animate-bounce-delay">⭐</div>
+        </>
+      )}
 
       {/* Main content */}
-      <div className="max-w-7xl mx-auto relative z-10">
-        <div className="max-w-4xl">
-          <h1 className="text-7xl font-black text-gray-800 mb-6 leading-tight tracking-tight text-shadow-fun">
+      <div style={{ maxWidth: '1280px', margin: '0 auto', position: 'relative', zIndex: 10 }}>
+        <div style={{ maxWidth: isMobile ? '100%' : '56rem' }}>
+          <h1 style={{
+            fontSize: isMobile ? '2.5rem' : '4.5rem',
+            fontWeight: 900,
+            color: '#1f2937',
+            marginBottom: isMobile ? '1rem' : '1.5rem',
+            lineHeight: 1.1,
+            letterSpacing: '-0.025em',
+            textShadow: isMobile 
+              ? '2px 2px 0px rgba(255,255,255,0.8), 3px 3px 0px rgba(0,0,0,0.1)' 
+              : '4px 4px 0px rgba(255,255,255,0.8), 6px 6px 0px rgba(0,0,0,0.1)'
+          }}>
             Online<br />
-            <span className="bg-gradient-to-l from-purple-800 via-pink-700 to-blue-800 bg-clip-text text-transparent inline-block animate-shimmer">
+            <span style={{
+              background: 'linear-gradient(90deg, #6b21a8 0%, #db2777 50%, #1e40af 100%)',
+              WebkitBackgroundClip: 'text',
+              backgroundClip: 'text',
+              color: 'transparent',
+              display: 'inline-block'
+            }} className="animate-shimmer">
               Worksheets For
             </span><br />
-            <span className="inline-block animate-wiggle-fast">
+            <span style={{ display: 'inline-block' }} className="animate-wiggle-fast">
               Kids 🎉
             </span>
           </h1>
           
-          <p className="text-2xl text-gray-600 mb-8 font-semibold text-shadow-soft">
+          <p style={{
+            fontSize: isMobile ? '1.125rem' : '1.5rem',
+            color: '#4b5563',
+            marginBottom: isMobile ? '1.5rem' : '2rem',
+            fontWeight: 600,
+            textShadow: '2px 2px 0px rgba(255,255,255,0.8)'
+          }}>
             Fun learning activities for curious minds!
           </p>
 
-          <button className="bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 text-white text-2xl font-bold py-4 px-10 rounded-full shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300 animate-pulse">
+          <button 
+            onClick={scrollToWorksheets}
+            style={{
+              background: 'linear-gradient(90deg, #a855f7 0%, #ec4899 50%, #3b82f6 100%)',
+              color: '#ffffff',
+              fontSize: isMobile ? '1.25rem' : '1.5rem',
+              fontWeight: 700,
+              padding: isMobile ? '0.875rem 2rem' : '1rem 2.5rem',
+              borderRadius: '9999px',
+              boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'all 0.3s',
+              animation: 'shimmer 2s ease-in-out infinite'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.05)';
+              e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(0,0,0,0.2)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.1)';
+            }}
+          >
             Start Learning! 🚀
           </button>
         </div>

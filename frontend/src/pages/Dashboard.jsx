@@ -1,14 +1,16 @@
 // src/pages/Dashboard.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navbar from '../components/Navbar'; // Adjust path as needed
-import KidsHeroSection from '../components/KidsHeroSection';
-import KidsFooter from '../components/Footer';
+import Navbar from '../components/Navbar.jsx'; // Adjust path as needed
+import KidsHeroSection from '../components/KidsHeroSection.jsx';
+import KidsFooter from '../components/Footer.jsx';
 import WorksheetsSection from '../components/WorksheetSections.jsx';
 
 const Dashboard = () => {
   const [hoveredCard, setHoveredCard] = useState(null);
   const navigate = useNavigate();
+
+  
 
   const categories = [
     {
