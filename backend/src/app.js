@@ -16,10 +16,9 @@ app.use(express.urlencoded({ limit: "16kb" }));
 app.use(cookieParser());
 app.use(express.static("public"));
 
-// Test
-app.get("/api/v1/test-error", (req, res) => {
-  throw new (require("./utils/APIError"))(400, "Test error working");
-})
+
+app.use('/api/v1', require('./routes/auth.routes'));
+
 
 app.get("/health", (req, res) => {
   res.status(200).json({

@@ -1,4 +1,4 @@
-const DB_NAME = "wowkids"
+const DB_NAME = process.env.DB_NAME || 'wowkids';
 const COOKIE_OPTIONS = {
     httpOnly: true,
     secure: true,
