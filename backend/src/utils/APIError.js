@@ -1,22 +1,18 @@
-const APIResponse = require('../utils/APIResponse');
+class APIError extends Error {
+  constructor(statusCode, message = "Something went wrong", errors = [], stack = "") {
+    super(message);
+    this.statusCode = statusCode;
+    this.success = false;
+    this.data = null;
+    this.errors = errors;
+    this.message = message;
 
-const errorMiddleware = (err, req, res, next) => {
-  const statusCode = err.statusCode || 500;
+    if (stack) {
+      this.stack = stack;
+    } else {
+      Error.captureStackTrace(this, this.constructor);
+    }
+  }
+}
 
-  console.error('ERROR:', {
-    message: err.message,
-    statusCode,
-    stack: err.stack,
-    route: `${req.method} ${req.originalUrl}`,
-    body: req.body
-  });
-
-  const response = new APIResponse(
-    statusCode,
-    null,
-    err.message || 'Internal Server Error'
-  );
-  return res.status(statusCode).json(response);
-};
-
-module.exports = errorMiddleware;
+module.exports = APIError;

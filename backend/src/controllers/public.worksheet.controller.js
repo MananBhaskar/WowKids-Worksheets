@@ -71,6 +71,60 @@ async function streamFromDriveToResponse(fileId, req, res, filename, asAttachmen
   }
 }
 
+// List worksheets for a specific grade+subject with pagination (page size fixed to 25)
+exports.listWorksheetsByGradeSubject = async (req, res, next) => {
+  try {
+    const { gradeId, subjectId } = req.params;
+   
+    // Validate ids
+    if (!gradeId || !subjectId) {
+      return next(new APIError(400, 'gradeId and subjectId are required in the URL'));
+    }
+    if (!require('mongoose').Types.ObjectId.isValid(gradeId)) {
+      return next(new APIError(400, 'Invalid gradeId'));
+    }
+    if (!require('mongoose').Types.ObjectId.isValid(subjectId)) {
+      return next(new APIError(400, 'Invalid subjectId'));
+    }
+
+    // Ensure grade exists
+    const Grade = require('../models/grade.model');
+    const Subject = require('../models/subject.model');
+    const Worksheet = require('../models/worksheet.model');
+
+    const grade = await Grade.findById(gradeId);
+    if (!grade) return next(new APIError(404, 'Grade not found'));
+
+    // Ensure subject exists and belongs to the grade
+    const subject = await Subject.findById(subjectId);
+    if (!subject) return next(new APIError(404, 'Subject not found'));
+    if (String(subject.grade) !== String(grade._id)) {
+      return next(new APIError(400, 'Subject does not belong to the specified grade'));
+    }
+
+    // Filter for published worksheets that match grade & subject
+    const filter = { published: true, grade: gradeId, subject: subjectId };
+
+
+    const [items, total] = await Promise.all([
+      Worksheet.find(filter)
+        .select('_id title fileName driveFileId category createdAt')
+        .populate('grade', 'name slug')
+        .populate('subject', 'name slug')
+        .sort({ createdAt: -1 }),
+      Worksheet.countDocuments(filter)
+    ]);
+
+   
+
+    return res.json(new APIResponse(200, items, 'Worksheets fetched for grade & subject'));
+  } catch (err) {
+    console.error('listWorksheetsByGradeSubject error:', err);
+    next(err);
+  }
+};
+
+
 exports.getWorksheetDetails = async (req, res, next) => {
   try {
     const { id } = req.params;
