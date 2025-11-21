@@ -19,6 +19,8 @@ app.use(express.static("public"));
 
 app.use('/api/v1', require('./routes/auth.routes'));
 app.use('/api/v1/admin', require('./routes/admin.routes'));
+app.use('/api/v1', require('./routes/public.routes'));
+
 
 
 

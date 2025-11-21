@@ -1,0 +1,108 @@
+const Worksheet = require('../models/worksheet.model');
+const APIError = require('../utils/APIError');
+const APIResponse = require('../utils/APIResponse');
+
+
+let driveClient;
+try {
+  const oauthSvc = require('../services/googleDriveOauth');
+  driveClient = oauthSvc && oauthSvc.drive ? oauthSvc.drive : null;
+} catch (e) {
+  throw new APIError(500, "Something is wrong with google drive storage")
+}
+
+if (!driveClient) {
+  console.warn('No Google Drive client found. Make sure services/googleDriveOauth.js or services/googleDrive.js exists.');
+}
+
+
+//   Helper: stream file from Drive to express response.
+//   Supports Range header (progressive requests).
+ 
+async function streamFromDriveToResponse(fileId, req, res, filename, asAttachment = false) {
+  if (!driveClient) throw new APIError(500, 'Storage client not configured');
+
+  const range = req.headers.range;
+  const requestParams = { fileId, alt: 'media' };
+  const getOptions = { responseType: 'stream' };
+
+  // If there is a Range header, forward it in request options (googleapis accepts headers on second arg)
+  if (range) getOptions.headers = { Range: range };
+
+  // First fetch metadata so we can set the Content-Type and optionally Content-Length
+  let meta;
+  try {
+    meta = await driveClient.files.get({ fileId, fields: 'name, mimeType, size' });
+  } catch (err) {
+    throw new APIError(404, 'File metadata not found or access denied');
+  }
+
+  const mimeType = (meta && meta.data && meta.data.mimeType) || 'application/pdf';
+  const safeName = filename || (meta && meta.data && meta.data.name) || 'worksheet.pdf';
+  res.setHeader('Content-Type', mimeType);
+
+  const dispositionType = asAttachment ? 'attachment' : 'inline';
+  res.setHeader('Content-Disposition', `${dispositionType}; filename="${safeName}"`);
+  res.setHeader('Accept-Ranges', 'bytes');
+
+  try {
+    const driveRes = await driveClient.files.get(requestParams, getOptions);
+    
+    if (driveRes && driveRes.headers) {
+      if (driveRes.headers['content-range']) {
+        res.setHeader('Content-Range', driveRes.headers['content-range']);
+        if (range) res.status(206);
+      }
+      if (driveRes.headers['content-length']) {
+        res.setHeader('Content-Length', driveRes.headers['content-length']);
+      }
+    }
+
+    driveRes.data.on('error', (err) => {
+      console.error('Drive stream error:', err);
+      if (!res.headersSent) res.status(500).end('Error streaming file');
+      else res.end();
+    });
+
+    driveRes.data.pipe(res);
+  } catch (err) {
+    console.error('Error fetching file from Drive:', err && err.message ? err.message : err);
+    throw new APIError(500, 'Error fetching file from storage');
+  }
+}
+
+exports.getWorksheetDetails = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const ws = await Worksheet.findById(id).populate('grade subject');
+    if (!ws || !ws.published) return next(new APIError(404, 'Worksheet not found'));
+    return res.json(new APIResponse(200, ws, 'Worksheet details fetched'));
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.previewWorksheet = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const ws = await Worksheet.findById(id);
+    if (!ws || !ws.published) return next(new APIError(404, 'Worksheet not found'));
+
+    await streamFromDriveToResponse(ws.driveFileId, req, res, ws.fileName, false);
+    // note: streamFromDriveToResponse pipes the response and ends it
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.downloadWorksheet = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const ws = await Worksheet.findById(id);
+    if (!ws || !ws.published) return next(new APIError(404, 'Worksheet not found'));
+
+    await streamFromDriveToResponse(ws.driveFileId, req, res, ws.fileName, true);
+  } catch (err) {
+    next(err);
+  }
+};
