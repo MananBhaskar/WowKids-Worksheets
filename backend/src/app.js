@@ -16,7 +16,15 @@ app.use(express.urlencoded({ limit: "16kb" }));
 app.use(cookieParser());
 app.use(express.static("public"));
 
-app.get("/api/v1/health", (req, res) => {
+
+app.use('/api/v1', require('./routes/auth.routes'));
+app.use('/api/v1/admin', require('./routes/admin.routes'));
+app.use('/api/v1', require('./routes/public.routes'));
+
+
+
+
+app.get("/health", (req, res) => {
   res.status(200).json({
     status: "OK",
     timestamp: new Date().toISOString(),
@@ -24,7 +32,7 @@ app.get("/api/v1/health", (req, res) => {
   });
 });
 
-app.get("/api/v1/ping", (req, res) => {
+app.get("/ping", (req, res) => {
   res.status(200).json({ message: "Server is awake" });
 });
 
