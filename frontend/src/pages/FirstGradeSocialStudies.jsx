@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
+
 
 const FirstGradeSocialStudies = () => {
   const [hoveredCard, setHoveredCard] = useState(null);
@@ -104,7 +103,6 @@ const FirstGradeSocialStudies = () => {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#ffffff' }}>
-    <Navbar/>
       {/* Hero Section */}
       <section style={{ 
         position: 'relative', 
@@ -250,7 +248,6 @@ const FirstGradeSocialStudies = () => {
           </div>
         </div>
       </section>
-      <Footer/>
     </div>
   );
 };

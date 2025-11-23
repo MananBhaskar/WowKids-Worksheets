@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
-import WhatsAppButton from '../components/WhatsAppButton';
+
 
 const PreschoolEnglish = () => {
   const [hoveredCard, setHoveredCard] = useState(null);
@@ -98,8 +96,6 @@ const PreschoolEnglish = () => {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#ffffff' }}>
-     <Navbar />
-    
 
       {/* Hero Section */}
       <section style={{ 
@@ -248,14 +244,6 @@ const PreschoolEnglish = () => {
           </div>
         </div>
       </section>
-
-      <WhatsAppButton 
-        phoneNumber="+91 98556 76503" 
-        message="Hi! I'm interested in your worksheets for kids."
-      />
-
-      <Footer/>
-
     </div>
   );
 };

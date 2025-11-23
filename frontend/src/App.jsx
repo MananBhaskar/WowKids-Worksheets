@@ -22,13 +22,15 @@ import TeachingMethods from './pages/TeachingMethods.jsx';
 import PrivacyPolicy from './pages/PrivacyPolicy.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
 import AdminAuth from './pages/AdminAuth.jsx';
+import Layout from './components/layout.jsx';
 
 function App() {
   return (
     <div className="App min-h-screen bg-white">
       <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/admin/login" element={<AdminAuth />} /> {/* Add this route */}
+      <Route path='/' element={<Layout />} >
+        <Route index element={<Dashboard />} />
+        <Route path="/admin/login" element={<AdminAuth />} /> 
         <Route path="/admindashboard" element={<AdminDashboard />} />
         <Route path="/preschool-tracing" element={<PreschoolTracing />} />
         <Route path="/preschool-english" element={<PreschoolEnglish />} />
@@ -50,6 +52,7 @@ function App() {
         <Route path="/blog-teaching-methods" element={<TeachingMethods />} />
         <Route path='/privacy-policy' element={<PrivacyPolicy />} />
         <Route path="*" element={<div>404 Page Not Found</div>} />
+      </Route>
       </Routes>
     </div>
   );
