@@ -1,19 +1,18 @@
 const Grade = require('../models/grade.model');
 const Subject = require('../models/subject.model');
+const Worksheet = require('../models/worksheet.model');
 const mongoose = require('mongoose');
 const APIError = require('../utils/APIError');
 const APIResponse = require('../utils/APIResponse');
-
-
-
+const {drive} = require('../services/googleDriveOauth')
 function makeSlug(text) {
   return String(text || '')
     .toLowerCase()
-    .normalize('NFKD') // normalize accents
-    .replace(/[\u0300-\u036F]/g, '') // remove diacritics
-    .replace(/[^a-z0-9]+/g, '-') // non-alnum -> hyphen
-    .replace(/^-+|-+$/g, '') // trim
-    .replace(/-{2,}/g, '-'); // collapse
+    .normalize('NFKD') 
+    .replace(/[\u0300-\u036F]/g, '') 
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') 
+    .replace(/-{2,}/g, '-'); 
 }
 
 async function generateUniqueSlug(model, base, filter = {}) {
@@ -104,12 +103,107 @@ exports.listSubjectsForGrade = async (req, res, next) => {
     }
 
     const subjects = await Subject.find({ grade: gradeId })
-      .populate('grade') // ⬅️ added this
+      .populate('grade') 
       .sort({ order: 1, name: 1 });
 
     return res.json(new APIResponse(200, subjects, 'Subjects fetched'));
   } catch (err) {
     console.error('listSubjectsForGrade error:', err);
+    next(err);
+  }
+};
+
+// DELETE /api/v1/admin/grades/:gradeId
+exports.deleteGrade = async (req, res, next) => {
+  try {
+    const { gradeId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(gradeId)) {
+      return next(new APIError(400, 'Invalid gradeId'));
+    }
+
+    const grade = await Grade.findById(gradeId);
+    if (!grade) return next(new APIError(404, 'Grade not found'));
+
+    // Find all subjects for this grade
+    const subjects = await Subject.find({ grade: gradeId }).select('_id');
+    const subjectIds = subjects.map(s => s._id);
+
+    // Find all worksheets for this grade
+    const worksheets = await Worksheet.find({ grade: gradeId }).select('_id driveFileId');
+
+    // Delete PDFs from Drive
+    if (drive && worksheets.length > 0) {
+      const deletions = worksheets.map(ws =>
+        drive.files.delete({ fileId: ws.driveFileId }).catch(err => {
+          console.warn('Drive delete failed for worksheet', ws._id.toString(), '-', err.message || err);
+        })
+      );
+      await Promise.allSettled(deletions);
+    }
+
+    // Delete worksheets from DB
+    const wsResult = await Worksheet.deleteMany({ grade: gradeId });
+
+    // Delete subjects from DB
+    const subjResult = await Subject.deleteMany({ grade: gradeId });
+
+    // Delete grade
+    await grade.deleteOne();
+
+    return res.json(
+      new APIResponse(200, {
+        gradeId,
+        deletedWorksheets: wsResult.deletedCount || 0,
+        deletedSubjects: subjResult.deletedCount || 0
+      }, 'Grade and related subjects & worksheets deleted')
+    );
+  } catch (err) {
+    console.error('deleteGrade error:', err);
+    next(err);
+  }
+};
+
+//  DELETE /api/v1/admin/subjects/:subjectId
+
+exports.deleteSubject = async (req, res, next) => {
+  try {
+    const { subjectId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(subjectId)) {
+      return next(new APIError(400, 'Invalid subjectId'));
+    }
+
+    const subject = await Subject.findById(subjectId);
+    if (!subject) return next(new APIError(404, 'Subject not found'));
+
+    // Find worksheets for this subject
+    const worksheets = await Worksheet.find({ subject: subjectId }).select('_id driveFileId');
+
+    // Delete PDFs from Drive
+    if (drive && worksheets.length > 0) {
+      const deletions = worksheets.map(ws =>
+        drive.files.delete({ fileId: ws.driveFileId }).catch(err => {
+          console.warn('Drive delete failed for worksheet', ws._id.toString(), '-', err.message || err);
+        })
+      );
+      await Promise.allSettled(deletions);
+    }
+
+    // Delete worksheets from DB
+    const wsResult = await Worksheet.deleteMany({ subject: subjectId });
+
+    // Delete subject
+    await subject.deleteOne();
+
+    return res.json(
+      new APIResponse(200, {
+        subjectId,
+        deletedWorksheets: wsResult.deletedCount || 0
+      }, 'Subject and related worksheets deleted')
+    );
+  } catch (err) {
+    console.error('deleteSubject error:', err);
     next(err);
   }
 };
