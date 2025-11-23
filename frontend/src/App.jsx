@@ -19,13 +19,17 @@ import SecondGradeMath from './pages/SecondGradeMath.jsx';
 import SecondGradeEnglish from './pages/SecondGradeEnglish.jsx';
 import SecondGradeSocialStudies from './pages/SecondGradeSocialStudies.jsx';
 import TeachingMethods from './pages/TeachingMethods.jsx';
-// import PrivacyPolicy from './pages/PrivacyPolicy.jsx';
+import PrivacyPolicy from './pages/PrivacyPolicy.jsx';
+import AdminDashboard from './pages/AdminDashboard.jsx';
+import AdminAuth from './pages/AdminAuth.jsx';
 
 function App() {
   return (
     <div className="App min-h-screen bg-white">
       <Routes>
         <Route path="/" element={<Dashboard />} />
+        <Route path="/admin/login" element={<AdminAuth />} /> {/* Add this route */}
+        <Route path="/admindashboard" element={<AdminDashboard />} />
         <Route path="/preschool-tracing" element={<PreschoolTracing />} />
         <Route path="/preschool-english" element={<PreschoolEnglish />} />
         <Route path="/preschool-math" element={<PreschoolMath />} />
@@ -44,7 +48,7 @@ function App() {
         <Route path="/2nd-grade-science" element={<SecondGradeScience />} />
         <Route path="/2nd-grade-social-studies" element={<SecondGradeSocialStudies />} />
         <Route path="/blog-teaching-methods" element={<TeachingMethods />} />
-        {/* <Route path='/privacy-policy' element={<PrivacyPolicy />} /> */}
+        <Route path='/privacy-policy' element={<PrivacyPolicy />} />
         <Route path="*" element={<div>404 Page Not Found</div>} />
       </Routes>
     </div>
