@@ -1,30 +1,37 @@
+// src/components/AdminAuth.jsx
 import React, { useState } from 'react';
 import { Lock, Mail, Eye, EyeOff, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export default function AdminAuth() {
   const navigate = useNavigate();
+  const { login } = useAuth();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setError('');
     setLoading(true);
-
-    // Simulate authentication
-    setTimeout(() => {
-      if (email === 'admin@example.com' && password === 'admin123') {
-        alert('Login successful! Welcome, Admin.');
-        setEmail('');
-        setPassword('');
-      } else {
-        setError('Invalid credentials. Please try again.');
-      }
+    try {
+      // call backend - will set httpOnly cookie
+      await login({ email, password });
+      // success — navigate to admin dashboard
+      navigate('/admindashboard');
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.message ||
+        'Login failed';
+      setError(msg);
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   const handleKeyPress = (e) => {
@@ -142,12 +149,7 @@ export default function AdminAuth() {
             </button>
           </div>
 
-          {/* Demo Credentials */}
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <p className="text-xs text-gray-500 text-center">
-              Demo credentials: admin@example.com / admin123
-            </p>
-          </div>
+
         </div>
 
         {/* Footer */}
