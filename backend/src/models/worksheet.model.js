@@ -11,6 +11,8 @@ const WorksheetSchema = new mongoose.Schema({
   fileName: { type: String },
   size: { type: Number }, // bytes
   published: { type: Boolean, default: true },
+  thumbnailUrl: { type: String, default: '' },
+  thumbnailPublicId: { type: String, default: '' },
   order: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now }
 });

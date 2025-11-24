@@ -3,6 +3,7 @@ const Subject = require('../models/subject.model');
 const Worksheet = require('../models/worksheet.model');
 const mongoose = require('mongoose');
 const APIError = require('../utils/APIError');
+const { cloudinary } = require('../services/cloudinary');
 const APIResponse = require('../utils/APIResponse');
 const {drive} = require('../services/googleDriveOauth')
 function makeSlug(text) {
@@ -125,38 +126,69 @@ exports.deleteGrade = async (req, res, next) => {
     const grade = await Grade.findById(gradeId);
     if (!grade) return next(new APIError(404, 'Grade not found'));
 
-    // Find all subjects for this grade
     const subjects = await Subject.find({ grade: gradeId }).select('_id');
     const subjectIds = subjects.map(s => s._id);
 
-    // Find all worksheets for this grade
-    const worksheets = await Worksheet.find({ grade: gradeId }).select('_id driveFileId');
+    const worksheets = await Worksheet.find({ grade: gradeId }).select(
+      '_id driveFileId thumbnailPublicId'
+    );
 
-    // Delete PDFs from Drive
-    if (drive && worksheets.length > 0) {
-      const deletions = worksheets.map(ws =>
-        drive.files.delete({ fileId: ws.driveFileId }).catch(err => {
-          console.warn('Drive delete failed for worksheet', ws._id.toString(), '-', err.message || err);
-        })
-      );
+    if (worksheets.length > 0) {
+      const deletions = worksheets.map(ws => {
+        const ops = [];
+
+        if (drive) {
+          ops.push(
+            drive.files.delete({ fileId: ws.driveFileId }).catch(err => {
+              console.warn(
+                'Drive delete failed for worksheet',
+                ws._id.toString(),
+                '-',
+                err.message || err
+              );
+            })
+          );
+        } else {
+          console.warn(
+            'Drive client not configured; skipping Drive delete for worksheet',
+            ws._id.toString()
+          );
+        }
+
+        if (cloudinary && ws.thumbnailPublicId) {
+          ops.push(
+            cloudinary.uploader
+              .destroy(ws.thumbnailPublicId, { resource_type: 'image' })
+              .catch(err => {
+                console.warn(
+                  'Cloudinary delete failed for worksheet',
+                  ws._id.toString(),
+                  '-',
+                  err.message || err
+                );
+              })
+          );
+        }
+
+        return Promise.allSettled(ops);
+      });
+
       await Promise.allSettled(deletions);
     }
 
-    // Delete worksheets from DB
     const wsResult = await Worksheet.deleteMany({ grade: gradeId });
-
-    // Delete subjects from DB
     const subjResult = await Subject.deleteMany({ grade: gradeId });
-
-    // Delete grade
     await grade.deleteOne();
-
     return res.json(
-      new APIResponse(200, {
-        gradeId,
-        deletedWorksheets: wsResult.deletedCount || 0,
-        deletedSubjects: subjResult.deletedCount || 0
-      }, 'Grade and related subjects & worksheets deleted')
+      new APIResponse(
+        200,
+        {
+          gradeId,
+          deletedWorksheets: wsResult.deletedCount || 0,
+          deletedSubjects: subjResult.deletedCount || 0
+        },
+        'Grade and related subjects & worksheets deleted'
+      )
     );
   } catch (err) {
     console.error('deleteGrade error:', err);
@@ -165,7 +197,6 @@ exports.deleteGrade = async (req, res, next) => {
 };
 
 //  DELETE /api/v1/admin/subjects/:subjectId
-
 exports.deleteSubject = async (req, res, next) => {
   try {
     const { subjectId } = req.params;
@@ -177,30 +208,67 @@ exports.deleteSubject = async (req, res, next) => {
     const subject = await Subject.findById(subjectId);
     if (!subject) return next(new APIError(404, 'Subject not found'));
 
-    // Find worksheets for this subject
-    const worksheets = await Worksheet.find({ subject: subjectId }).select('_id driveFileId');
+    const worksheets = await Worksheet.find({ subject: subjectId }).select(
+      '_id driveFileId thumbnailPublicId'
+    );
 
-    // Delete PDFs from Drive
-    if (drive && worksheets.length > 0) {
-      const deletions = worksheets.map(ws =>
-        drive.files.delete({ fileId: ws.driveFileId }).catch(err => {
-          console.warn('Drive delete failed for worksheet', ws._id.toString(), '-', err.message || err);
-        })
-      );
+    if (worksheets.length > 0) {
+      const deletions = worksheets.map(ws => {
+        const ops = [];
+
+        if (drive) {
+          ops.push(
+            drive.files.delete({ fileId: ws.driveFileId }).catch(err => {
+              console.warn(
+                'Drive delete failed for worksheet',
+                ws._id.toString(),
+                '-',
+                err.message || err
+              );
+            })
+          );
+        } else {
+          console.warn(
+            'Drive client not configured; skipping Drive delete for worksheet',
+            ws._id.toString()
+          );
+        }
+
+        // Delete thumbnail from Cloudinary
+        if (cloudinary && ws.thumbnailPublicId) {
+          ops.push(
+            cloudinary.uploader
+              .destroy(ws.thumbnailPublicId, { resource_type: 'image' })
+              .catch(err => {
+                console.warn(
+                  'Cloudinary delete failed for worksheet',
+                  ws._id.toString(),
+                  '-',
+                  err.message || err
+                );
+              })
+          );
+        }
+
+        return Promise.allSettled(ops);
+      });
+
       await Promise.allSettled(deletions);
     }
 
-    // Delete worksheets from DB
     const wsResult = await Worksheet.deleteMany({ subject: subjectId });
 
-    // Delete subject
     await subject.deleteOne();
 
     return res.json(
-      new APIResponse(200, {
-        subjectId,
-        deletedWorksheets: wsResult.deletedCount || 0
-      }, 'Subject and related worksheets deleted')
+      new APIResponse(
+        200,
+        {
+          subjectId,
+          deletedWorksheets: wsResult.deletedCount || 0
+        },
+        'Subject and related worksheets deleted'
+      )
     );
   } catch (err) {
     console.error('deleteSubject error:', err);
